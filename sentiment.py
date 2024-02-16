@@ -7,7 +7,7 @@ from torch import cuda
 import torch
 from jwtAuth import JWTBearer, create_access_token
 from transformers import AutoTokenizer, DistilBertForSequenceClassification
-from transformers import pipeline
+
 
 
 
