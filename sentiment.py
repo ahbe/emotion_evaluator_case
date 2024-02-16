@@ -6,7 +6,8 @@ import json
 from torch import cuda
 import torch
 from jwtAuth import JWTBearer, create_access_token
-from transformers import AutoTokenizer, DistilBertForSequenceClassification
+from transformers import AutoTokenizer, DistilBertForSequenceClassification, RobertaForSequenceClassification
+from scipy.special import softmax
 
 
 
@@ -21,25 +22,45 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# ******************** Loading global ai model ********************
+# ******************** Loading distilbert ai model ********************
 
-try:
-    tokenizer = AutoTokenizer.from_pretrained("./results/sentiment")
-    model = DistilBertForSequenceClassification.from_pretrained("./results/sentiment")
-except Exception as e:
-    raise e
+def load_distilbert():
+    try:
+        tokenizer = AutoTokenizer.from_pretrained("./results/sentiment_distilbert")
+        model = DistilBertForSequenceClassification.from_pretrained("./results/sentiment_distilbert")
+    except Exception as e:
+        raise e
 
-device = "cuda" if cuda.is_available() else "cpu"
-model.to(device)
+    device = "cuda" if cuda.is_available() else "cpu"
+    model.to(device)
+
+    return tokenizer, model
+
+
+# ******************** Loading roberta ai model ********************
+
+def load_roberta():
+    try:
+        tokenizer = AutoTokenizer.from_pretrained("./results/sentiment_roberta")
+        model = RobertaForSequenceClassification.from_pretrained("./results/sentiment_roberta")
+    except Exception as e:
+        raise e
+
+    device = "cuda" if cuda.is_available() else "cpu"
+    model.to(device)
+
+    return tokenizer, model
 
 class JWTToken(BaseModel):
     token: str
 
 class Request(BaseModel):
     text : str
+    model_type: str = "distilbert"
 
 class SentimentResponse(BaseModel):
     sentiment : str
+    score : float
 
 
 # ******************** Api to get JWT Token ********************
@@ -59,17 +80,29 @@ async def authorize():
 # ******************** Api to call using image file ********************
 @app.post('/api/sentiment', summary="Extract information from images",response_model=SentimentResponse,dependencies=[Depends(JWTBearer())])
 def scrape(req:Request):
-
+        
+    if req.model_type == "distilbert":
+        tokenizer, model = load_distilbert()
+        
+    elif req.model_type == "roberta":
+        tokenizer, model = load_roberta()
+        
 
     inputs = tokenizer(req.text, return_tensors="pt")
     with torch.inference_mode():
         logits = model(**inputs).logits
+
     predicted_class_id = logits.argmax().item()
 
     output = model.config.id2label[predicted_class_id]
 
+    scores_ = softmax(logits)
+
+
+    result = {output : str(scores_[0][predicted_class_id])}
+
         
-    return Response(json.dumps(output),media_type='application/json')
+    return Response(json.dumps(result),media_type='application/json')
 
 
 

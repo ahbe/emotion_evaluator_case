@@ -1,7 +1,10 @@
 fastapi==0.109.2
+gradio==4.19.0
 jose==1.0.0
+pandas==2.0.3
 pydantic==2.6.1
 python_jose==3.3.0
-torch==2.0.0
+scipy
+torch
 transformers==4.27.4
 uvicorn==0.27.1
