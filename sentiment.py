@@ -94,7 +94,9 @@ def scrape(req:Request):
 
     predicted_class_id = logits.argmax().item()
 
-    output = model.config.id2label[predicted_class_id]
+    labels = ['negative', 'positive']
+
+    output = labels[predicted_class_id]
 
     scores_ = softmax(logits)
 
