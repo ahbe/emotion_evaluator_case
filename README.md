@@ -39,8 +39,7 @@ docker build . -t sentiment
 ```
 then
 ```sh
-python sentiment.py
-```
+docker run -it sentiment
 
 ## Postman
 ### Auth
@@ -66,6 +65,7 @@ then
 ```sh
 python app.py
 ```
+![image](src/gradio.png)
 
 ## Use Script
 ```sh
@@ -90,7 +90,7 @@ python benchmark.py --data_path ./data/IMDB-movie-reviews.csv
 ## Documentation
 
 ```sh
-http://host.docker.internal:2024/docs
+http://127.0.0.1:2024/docs
 ```
 
 
